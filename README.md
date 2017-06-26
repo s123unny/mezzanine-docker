@@ -1,35 +1,27 @@
-# mezzanine-docker
-* mezzanine app on docker
-* composed by mezzanine, mariadb & nginx
-## Requirements
-* docker & docker compose
-* git
-
-## Installation
-### Run the Containers ###
-1. Clone the project into a local directory
-   * `git clone https://github.com/duck105/mezzanine-docker.git`
-
-2. Go into your project directory
-   * `cd mezzanine-docker`
-
-3. Run Docker Compose 
-   * `docker-compose up` 
-   
-4. If there's any error code about `Can't connect to MySQL server on 'db' ` <br>
-Just stop the process and run `docker-compose up`  again
-### Install the Database ###
-1. Identify your container
-   * `sudo docker ps`
-
-2. Run bash interactively in the web_container
-   * `$> sudo docker exec -it CONTAINER_NAME /bin/bash`
-
-3. Create the database
-   * `CONTAINER_NAME$> python manage.py createdb`
-
-4. Exit the container
-   * `CONTAINER_NAME$> exit`
-
-## Structure
- ![image](https://github.com/duck105/mezzanine-docker/raw/master/structure.jpeg)
+## Mezzanine + Mysql Master-slave replication + docker
+### Prepare
+1. one machine for master and one for slave
+2. docker & docker-compose
+3. open 3306 port
+    * `iptables -t filter -A INPUT -p tcp --sport 3306 -j ACCEPT`
+    * `iptables -t filter -A OUTPUT -p tcp --dport 3306 -j ACCEPT`
+### Installation
+1. Clone the project
+    * `git clone https://github.com/duck105/mezzanine-docker.git projectdir`
+    * `cd projectdir`
+    * `git checkout feature/database_slave`
+2. Set the local settings (docker-compose.yml)
+    * need to set server_id & master's ip
+    * master don't need to set MYSQL_MASTER_SERVER
+3. Run Docker Compose
+    * `docker-compose up`
+### Create database & collect static file
+1. Run bash interactively in the container
+    * `docker exec -it CONTAINER_NAME /bin/bash`
+2. command:
+    * `python manage.py createdb --noinput`
+    * `python manage.py collectstatic --noinput`
+### Done
+ * Then we have a set of master-slave web service
+ * Open the browser and go to http://[master's ip] or http://[slave's ip]
+ * Create blog on master's web & check it has been replicated to the slave 
